@@ -178,7 +178,7 @@ function mapData() {
 		{
 			id: postData.id,
 			type: postData.type,
-			postTitle: postData.title.rendered,
+			title: postData.title.rendered,
 			slug: postData.slug,
 			content: postData.content.rendered,
 			publishDate: postData.date_gmt + '+00:00',
@@ -393,12 +393,11 @@ function getAndStoreAssets(environment, assets) {
 		}
 	})
 	.then((result) => {
-		// console.log(result.data.items);
+		
 		contentfulData.assets = []
 		for (const item of result.data.items) {
 			contentfulData.assets.push(item.fields.file['en-US'].url)
 		}
-
 		createContentfulPosts(environment, assets)
 
 	}).catch((err) => {
@@ -418,8 +417,6 @@ function getAndStoreAssets(environment, assets) {
 function createContentfulPosts(environment, assets) {
 	console.log(`Creating Contentful Posts...`)
 	console.log(logSeparator)
-	console.log('assets--------------------0000000', assets);
-	// let postFields = {}
 	/**
 	 * Dynamically build our Contentful data object
 	 * using the keys we built whilst reducing the WP Post data.alias
@@ -438,7 +435,6 @@ function createContentfulPosts(environment, assets) {
 		let postFields = {}
 
 		for (let [postKey, postValue] of Object.entries(post)) {
-		// console.log(`postKey: ${postValue}`)
 			if (postKey === 'content') {
 				postValue = turndownService.turndown(postValue)
 			}
@@ -481,11 +477,26 @@ function createContentfulPosts(environment, assets) {
 			if (postKey === 'featuredImage' && postValue === 0) {
 				delete postFields.featuredImage
 			}
+
+			if (postKey === 'categories') {
+				postFields.categories = {
+					'en-US': {
+						sys: {
+							type: 'Link',
+							linkType: 'Entry',
+							id: 'blogging'
+						}
+					}
+				}
+			}
 		}
+		console.log('postFields-----------000000000', postFields.categories);
 		promises.push(postFields)
+		console.log('promises-----------000000000', promises);
 	}
 
 	console.log(`Post objects created, attempting to create entries...`)
+	// createContentType(environment);
 	createContentfulEntries(environment, promises)
 		.then((result) => {
 			console.log(logSeparator);
@@ -495,6 +506,75 @@ function createContentfulPosts(environment, assets) {
 			console.log(logSeparator);
 		});
 }
+/**
+ * Migration Content Type
+ */
+// const fieldContentType = [
+// 	{
+// 		id: 'postTitle',
+// 		name: 'Post Title',
+// 		required: true,
+// 		localized: false,
+// 		type: 'Text',
+// 		disabled: false,
+// 		omitted: false
+// 	},
+// 	{
+// 		id: 'slug',
+// 		name: 'Slug',
+// 		required: true,
+// 		localized: false,
+// 		type: 'Text',
+// 		disabled: false,
+// 		omitted: false
+// 	},
+// 	{
+// 		id: 'content',
+// 		name: 'Content',
+// 		required: true,
+// 		localized: false,
+// 		type: 'Symbol',
+// 		disabled: false,
+// 		omitted: false
+// 	},
+// 	{
+// 		id: "publishDate",
+// 		name: "Publish Date",
+// 		type: "Date",
+// 		localized: false,
+// 		required: true,
+// 		validations: [],
+// 		disabled: false,
+// 		omitted: false
+// 	},
+// 	{
+// 		id: "tags",
+// 		type: "Array",
+// 		items: { "type": "Symbol" }
+// 	}
+// ]
+
+/**
+ * 
+ * @param {String} environment - Name of Contentful Environment.
+ *
+ */
+// function createContentType(environment) {
+// 	let contentType = environment.createContentTypeWithId('blogPost', {
+// 		name: 'Blog Post',
+// 		displayField: 'title',
+// 		fields: fieldContentType
+// 	})
+// 	.then((contentType) => {
+// 		contentType.publish()
+//         .then(contentType => {
+//             console.log(contentType)
+//             // createContentfulEntries(environment)
+//         })
+// 	})
+// 	// .then((contentType) => console.log(contentType))
+// 	.catch(console.error)
+// }
 
 /**
  * For each post data tree, publish a Contentful entry.
@@ -506,16 +586,11 @@ function createContentfulEntries(environment, promises) {
 
 		let newPost;
 		console.log(`Attempting: ${post.slug['en-US']}`)
-		// console.log('postsssss', post);
+		console.log('postsssss', post);
 		setTimeout(() => {
 			try {
 				newPost = environment.createEntry('blogPost', {
-					// fields: post
-					fields: {
-						title: {
-							'en-US': 'Entry title'
-						}
-					}
+					fields: post
 				})
 				.then((entry) => entry.publish())
 				.then((entry) => {

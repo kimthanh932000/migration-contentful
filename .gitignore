@@ -1,7 +1,11 @@
 node_modules/
 .env
+<<<<<<< HEAD
 .idea/.gitignore
 .idea/migration-contentful.iml
 .idea/modules.xml
 .idea/vcs.xml
 test-migration.js
+=======
+package-lock.json
+>>>>>>> 2753a375cb7f0a4da44f4592c12f1a9811b764a4
