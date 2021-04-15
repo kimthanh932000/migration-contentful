@@ -1,2 +1,7 @@
 node_modules/
 .env
+.idea/.gitignore
+.idea/migration-contentful.iml
+.idea/modules.xml
+.idea/vcs.xml
+test-migration.js
